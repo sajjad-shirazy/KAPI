@@ -34,9 +34,8 @@
                 if(isset($args['call'])){
                     list($class, $method) = explode('.', $args['call']);
                     $class = strtolower($class);
-					$path = '..'.DIRECTORY_SEPARATOR  .$class.'.php';
-                    if(file_exists($path)){
-                        include_once $path;
+                    if(file_exists($class.'.php')){
+                        include_once $class.'.php';
                         $api = new $class();
                         if(!method_exists($api,$method)){
                             throw new Exception('wrong_call');
