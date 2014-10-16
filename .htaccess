@@ -1,2 +1,2 @@
 RewriteEngine On    # Turn on the rewriting engine
-RewriteRule    ^([A-Za-z0-9-]+)/([A-Za-z0-9-]+)\((.*)\)$    khesht/index.php?call=$1.$2&$3    [NC,NE,L]    # Process parrots
+RewriteRule    ^([A-Za-z0-9-]+)/([A-Za-z0-9-]+)\((.*)\)$    kapi/index.php?call=$1.$2&$3    [NC,NE,L]    # Process parrots
