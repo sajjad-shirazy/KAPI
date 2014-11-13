@@ -1,4 +1,4 @@
 <?php
-    include_once 'khesht/api.php';
+    include_once 'kapi/api.php';
     KAPI::start();
 ?>

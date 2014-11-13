@@ -45,13 +45,14 @@
                             foreach ((new ReflectionMethod($class, $method))->getParameters() as $param) {
                                 if(!$param->isOptional()){
                                     $param_name = $param->getName();
-                                    if(!isset($args[$param_name]) || $args[$param_name]==""){
+                                    //if(!isset($args[$param_name]) || $args[$param_name]==''){
+                                    if(!isset($args[$param_name])){
                                         throw new Exception('arg_missed');
                                     }else if(!$api->checkArg($param_name,$args[$param_name])){
                                         throw new Exception('wrong_arg');
                                     }else{
                                         //$value = mysql_real_escape_string($args[$param_name]);
-                                        $value = $args[$param_name];
+                                        $value = $args[$param_name]=='' ? null : $args[$param_name];
                                         array_push($params,is_numeric($value)?(double)$value:$value);
                                     }
                                 }

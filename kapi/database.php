@@ -31,8 +31,8 @@
 		return substr($sql,0,strlen($sql)-1);
 	    }
 	    public function call($procedure,$args){
-		$args = $this->sql_args_string($args);
-		return $this->query("CALL $procedure($args);");
+			$args = $this->sql_args_string($args);
+			return $this->query("CALL $procedure($args);");
 	    }
 	    public function query($query) {
 	    	//echo '<div  class="well">'.$query.'</div>';
