@@ -3,16 +3,22 @@ include_once 'database.php';
 class KAPI
 {
     protected $db;
-    public function __construct($dbHost, $username, $password, $dbname) {
-        if (isset($dbHost)) {
-            $this->db = new KDatabase($dbHost, $username, $password, $dbname);
+    public function __construct() {
+        if (isset(self::$config['db'])) {
+            $this->db = new KDatabase(
+                self::$config['db']['host'], 
+                self::$config['db']['username'], 
+                self::$config['db']['password'], 
+                self::$config['db']['name']
+                );
         }
+        $this->startSession();
     }    
     protected function call($method, $args) {
         return call_user_func_array(array($this, $method), $args);
     }
     protected function apiLink($method, $args = array()) {
-        return explode('?', KAPI::url()) [0] . '?' . http_build_query(array_merge($args, array('call' => get_class($this) . '.' . $method)));
+        return explode('?', self::url()) [0] . '?' . http_build_query(array_merge($args, array('call' => get_class($this) . '.' . $method)));
     }
     //---------------------------------------------------------------
     //-- Static members section
@@ -26,11 +32,11 @@ class KAPI
         return 'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
     }
     protected static function error($message) {
-        die(KAPI::output(array('error' => $message)));
+        die(self::output(array('error' => $message)));
     }
-    protected static function redirect($url, $params = null) {
+    protected static function redirect($url = null, $params = null) {
         if(!$url){
-            $url = explode('api/', KAPI::url()) [0];
+            $url = explode('api/', self::url()) [0];
         }
         $url.= ($params ? (strpos($url, '?') !== false ? '&' : '?') . urldecode(http_build_query($params)) : '');
         //print_r([$url, $params]);
@@ -38,7 +44,7 @@ class KAPI
         header("Location: $url");
     }
     private static function output($value, $encoder = 'JSON') {
-        if (array_key_exists('callback', KAPI::$args) && KAPI::$args['callback']!='') {
+        if (array_key_exists('callback', self::$args) && self::$args['callback']!='') {
             if ($value && array_key_exists('error', $value)) {
                 $value['message'] = $value['error'];
                 unset($value['error']);
@@ -46,7 +52,7 @@ class KAPI
             } else {
                 $statue = 'success';
             }
-            KAPI::redirect(KAPI::$args['callback'], array_merge(['status' => $statue], $value?$value:[]));
+            self::redirect(self::$args['callback'], array_merge(['status' => $statue], $value?$value:[]));
         } else {
             $encoder = $encoder ? : 'JSON';
             switch ($encoder) {
@@ -63,13 +69,15 @@ class KAPI
         }
     }
     public static $args;
+    protected static $config;
     public static function start() {
-        KAPI::$args = array_merge($_GET, $_POST, $_FILES, array());
+        self::$config = include('config.php');
+        self::$args = array_merge($_GET, $_POST, $_FILES, array());
         try {
             
             //error_reporting(E_ERROR);
-            if (isset(KAPI::$args['call'])) {
-                list($class, $method) = explode('.', KAPI::$args['call']);
+            if (isset(self::$args['call'])) {
+                list($class, $method) = explode('.', self::$args['call']);
                 $class = strtolower($class);
                 if (file_exists($class . '.php')) {
                     include_once $class . '.php';
@@ -82,13 +90,13 @@ class KAPI
                         if ($reflection->isPublic()) {
                             foreach ($reflection->getParameters() as $param) {
                                 $param_name = $param->getName();
-                                if (!$param->isOptional() && !isset(KAPI::$args[$param_name])) {
+                                if (!$param->isOptional() && !isset(self::$args[$param_name])) {
                                     throw new Exception($param_name . '_missed');
                                 }
-                                $value = !array_key_exists($param_name, KAPI::$args) || KAPI::$args[$param_name] == '' ? null : KAPI::$args[$param_name];
+                                $value = !array_key_exists($param_name, self::$args) || self::$args[$param_name] == '' ? null : self::$args[$param_name];
                                 array_push($params, is_numeric($value) ? (double)$value : $value);
                             }
-                            KAPI::output($api->call($method, $params), isset(KAPI::$args['output']) ? strtoupper(KAPI::$args['output']) : null);
+                            self::output($api->call($method, $params), isset(self::$args['output']) ? strtoupper(self::$args['output']) : null);
                         } else {
                             throw new Exception('private_method_call');
                         }
@@ -101,7 +109,7 @@ class KAPI
             }
         }
         catch(Exception $e) {
-            KAPI::error($e->getMessage());
+            self::error($e->getMessage());
         }
     }
     static function handleFiles($files, $options) {

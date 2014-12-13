@@ -1,5 +1,5 @@
 <?php
 include_once 'kapi/api.php';
-//print_r($_GET);print_r($_POST);print_r($_FILES);
+//print_r(array_merge($_GET,$_POST,$_FILES));
 KAPI::start();
 ?>

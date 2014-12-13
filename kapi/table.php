@@ -33,7 +33,7 @@ class KTable extends mysqli_result implements ArrayAccess
         return json_encode($rows, JSON_UNESCAPED_UNICODE | JSON_NUMERIC_CHECK);
     }
     public function getRows($column = null) {
-        if ($this->isEmpty()) {
+        if ($this->isEmpty() || $this->num_rows == 0) {
             return [];
         } else {
             $this->data_seek(0);
@@ -44,16 +44,17 @@ class KTable extends mysqli_result implements ArrayAccess
             return $rows;
         }
     }
-    public function prepareData($justFirstRow = false) {
-        return $this->isEmpty() || $this->num_rows == 0 ? null : ($justFirstRow ? $this->getRows() [0] : $this->getRows());
+    public function getRow($index = 0) {
+        $rows = $this->getRows();
+        return sizeof($rows) > 0 ? $rows[$index] : null;
     }
     public function hasError() {
-        $result = $this->prepareData(true);
-        return !is_null($result) && isset($result['error']);
+        $result = $this->getRow();
+        return $result && isset($result['error']);
     }
     public function getError() {
         if ($this->hasError()) {
-            return $this->prepareData(true) ['error'];
+            return $this->getRow() ['error'];
         }
     }
 }
